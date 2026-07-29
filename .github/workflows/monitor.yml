@@ -1,0 +1,78 @@
+name: Cybertruck 库存监控
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"   # GitHub 定时任务最短间隔 5 分钟(高峰期可能延迟到 10~20 分钟)
+  workflow_dispatch: {}      # 允许在 Actions 页面手动触发
+  push:
+    branches: [main]
+    paths-ignore:
+      - "state/**"           # 状态回写的提交不再触发运行(双保险:提交信息也带 [skip ci])
+
+concurrency:
+  group: ct-monitor
+  cancel-in-progress: false  # 上一轮没跑完时新一轮排队,不互相打断
+
+permissions:
+  contents: write            # 需要把去重状态提交回仓库
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: 安装依赖
+        run: pip install -r requirements.txt
+
+      - name: 缓存 camoufox 浏览器
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/camoufox
+            ~/.local/share/camoufox
+          key: camoufox-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+
+      - name: 准备 camoufox 浏览器(已缓存时秒过)
+        run: python -m camoufox fetch
+
+      - name: 安装虚拟显示(headless 被拦时的备用模式)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq xvfb || true
+
+      - name: 运行库存检查(每次任务内连查 3 轮,把有效间隔压到约 1.5~2 分钟)
+        env:
+          SERVERCHAN_SENDKEY: ${{ secrets.SERVERCHAN_SENDKEY }}
+          PUSHPLUS_TOKEN: ${{ secrets.PUSHPLUS_TOKEN }}
+          WECOM_WEBHOOK: ${{ secrets.WECOM_WEBHOOK }}
+          ZIP_CODE: "92614"
+          FETCH_MODES: "headless,virtual"
+        run: python tesla_ct_monitor.py --loop 70 --max-runs 3
+
+      - name: 保存去重状态(提交回仓库)
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add state/ || true
+          if git diff --cached --quiet; then
+            echo "状态无变化,跳过提交"
+            exit 0
+          fi
+          git commit -m "更新库存去重状态 [skip ci]"
+          pushed=0
+          for i in 1 2 3; do
+            if git push; then pushed=1; break; fi
+            git pull --rebase origin main || true
+          done
+          if [ "$pushed" != "1" ]; then
+            echo "::error::去重状态推送失败——状态丢失会导致下轮重复通知,请检查仓库写权限/分支保护"
+            exit 1
+          fi

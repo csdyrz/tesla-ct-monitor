@@ -1,0 +1,8 @@
+{
+  "_说明": "本地运行时把本文件复制为 config.json 并填入密钥(config.json 已被 .gitignore 忽略,不会上传)。云端(GitHub Actions)不用这个文件,用仓库 Secrets。",
+  "SERVERCHAN_SENDKEY": "",
+  "PUSHPLUS_TOKEN": "",
+  "WECOM_WEBHOOK": "",
+  "ZIP_CODE": "92614",
+  "EXCLUDE_DEMO": "0"
+}

@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+config.json
+state/*.tmp
+state/*.corrupt.json
+.DS_Store
+Thumbs.db
