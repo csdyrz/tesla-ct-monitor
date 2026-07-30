@@ -4,5 +4,6 @@
   "PUSHPLUS_TOKEN": "",
   "WECOM_WEBHOOK": "",
   "ZIP_CODE": "92614",
-  "EXCLUDE_DEMO": "0"
+  "EXCLUDE_DEMO": "1",
+  "_EXCLUDE_DEMO说明": "1=只要真·全新(排除展车/试驾车及里程超 200 英里的车);0=展车也提醒并标注里程"
 }

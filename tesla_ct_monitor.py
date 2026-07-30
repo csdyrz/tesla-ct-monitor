@@ -20,7 +20,9 @@
   PUSHPLUS_TOKEN       PushPlus token(pushplus.plus,免费额度更大)
   WECOM_WEBHOOK        企业微信群机器人 webhook 完整地址
   ZIP_CODE             搜索邮编,默认 92614
-  EXCLUDE_DEMO         设为 1 时排除展车(默认 0:展车也提醒,消息里会标注)
+  EXCLUDE_DEMO         设为 1 时排除展车(官方“新车”库存里含试驾/展示车,有里程有折扣;
+                       排除时里程超过 MAX_ODOMETER_MILES 的车即使没标展车也一并排除)
+  MAX_ODOMETER_MILES   配合 EXCLUDE_DEMO=1 的里程红线,默认 200(全新车运输里程通常 <50)
   RESURFACE_DAYS       同一辆车从库存消失超过 N 天后重新出现时再次提醒,默认 3
   FAIL_ALERT_THRESHOLD 连续失败 N 次后发一条告警(24 小时内不重复),默认 10
   FETCH_MODES          抓取模式尝试顺序,默认 "headless"(云端建议 "headless,virtual")
@@ -98,6 +100,7 @@ def load_config() -> dict:
         "WECOM_WEBHOOK",
         "ZIP_CODE",
         "EXCLUDE_DEMO",
+        "MAX_ODOMETER_MILES",
         "RESURFACE_DAYS",
         "FAIL_ALERT_THRESHOLD",
         "FETCH_MODES",
@@ -108,6 +111,7 @@ def load_config() -> dict:
             cfg[key] = val
     cfg.setdefault("ZIP_CODE", "92614")
     cfg.setdefault("EXCLUDE_DEMO", "0")
+    cfg.setdefault("MAX_ODOMETER_MILES", "200")
     cfg.setdefault("RESURFACE_DAYS", "3")
     cfg.setdefault("FAIL_ALERT_THRESHOLD", "10")
     cfg.setdefault("FETCH_MODES", "headless")
@@ -601,12 +605,14 @@ def run_once(fetcher: InventoryFetcher, cfg: dict, dry_run: bool = False) -> boo
     kept: list[dict] = []
     counts = {"exclude_beast": 0, "exclude_base": 0, "demo_skipped": 0}
     exclude_demo = str(cfg["EXCLUDE_DEMO"]) == "1"
+    max_odo = float(cfg.get("MAX_ODOMETER_MILES") or 200)
     for v in vehicles:
         decision, label = classify_vehicle(v)
         if decision in ("exclude_beast", "exclude_base"):
             counts[decision] += 1
             continue
-        if exclude_demo and v.get("IsDemo"):
+        # IsDemo 是官方展车标志;里程红线兜底防止漏标的展车混入
+        if exclude_demo and (v.get("IsDemo") or (v.get("Odometer") or 0) > max_odo):
             counts["demo_skipped"] += 1
             continue
         kept.append(summarize_vehicle(v, cfg["ZIP_CODE"], unknown=(decision == "include_unknown")))

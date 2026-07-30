@@ -63,7 +63,8 @@ python tesla_ct_monitor.py --loop 60   # 常驻:每约 60 秒查一次,比云端
 | 参数 | 默认 | 说明 |
 |---|---|---|
 | `ZIP_CODE` | `92614` | 搜索邮编(交付/运费按它算) |
-| `EXCLUDE_DEMO` | `0` | 设 `1` 排除展车(默认展车也提醒并标注里程) |
+| `EXCLUDE_DEMO` | 脚本 `0`,云端已设 `1` | 特斯拉官方"新车"库存里混着**展车/试驾车**(有几千英里里程、给折扣,但法律上算新车);设 `1` 只要真·全新 |
+| `MAX_ODOMETER_MILES` | `200` | 配合 `EXCLUDE_DEMO=1` 的里程红线:就算没标展车标志,里程超过它也排除(真全新车运输里程通常 <50 英里) |
 | `RESURFACE_DAYS` | `3` | 车辆从库存消失超过 N 天后重新出现 → 按"回补"再提醒 |
 | `FAIL_ALERT_THRESHOLD` | `10` | 连续失败 N 次给你发一条告警(24 小时内不重复) |
 | `FETCH_MODES` | `headless` | 抓取模式顺序;云端用 `headless,virtual`(后者是带虚拟显示器的备用模式) |
@@ -73,6 +74,7 @@ python tesla_ct_monitor.py --loop 60   # 常驻:每约 60 秒查一次,比云端
 - ✅ **保留**:`CT_AWD`(含 "Cybertruck All-Wheel Drive"、"Premium All-Wheel Drive" 等全轮驱动版本)
 - ❌ **排除**:`CT_CYB` / 名称含 Cyberbeast(野兽版)
 - ❌ **排除**:后驱 / Long Range / Standard Range 字样(丐版)
+- ❌ **排除**(云端默认):展车/试驾车——官方把它们放在"新车"库存里(`IsDemo=true`、有里程、给折扣),但不是真·全新;里程 >200 英里的即使没标展车也排除
 - ❓ **未知新版本**:照样提醒但带"❓未知版本"标签(宁可多报不漏报)
 
 ## 🧰 故障排查

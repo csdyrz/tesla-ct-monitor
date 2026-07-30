@@ -54,6 +54,7 @@ jobs:
           PUSHPLUS_TOKEN: ${{ secrets.PUSHPLUS_TOKEN }}
           WECOM_WEBHOOK: ${{ secrets.WECOM_WEBHOOK }}
           ZIP_CODE: "92614"
+          EXCLUDE_DEMO: "1"   # 只要真·全新:排除展车(官方"新车"里含试驾/展示车)及里程超 200 英里的车
           FETCH_MODES: "headless,virtual"
         run: python tesla_ct_monitor.py --loop 70 --max-runs 18
 

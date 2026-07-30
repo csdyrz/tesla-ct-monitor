@@ -260,6 +260,29 @@ class TestRunOnce(unittest.TestCase):
                 title = na.call_args[0][1]
                 self.assertIn("上新1辆", title)
 
+    def test_exclude_demo_odometer_redline(self):
+        # 里程红线:没标展车标志但里程 7000+ 英里的车,EXCLUDE_DEMO=1 时也要排除;
+        # 4 英里的真全新车不受影响
+        with tempfile.TemporaryDirectory() as d:
+            cfg = self.cfg(d)
+            cfg["EXCLUDE_DEMO"] = "1"
+            sneaky_demo = car("y1", "CT_AWD", "Cybertruck All-Wheel Drive", "$MTC03",
+                              price=73950, demo=False, odo=7056)
+            fresh = car("y2", "CT_AWD", "Premium All-Wheel Drive", "$MTC07", odo=4)
+            fetcher = FakeFetcher([sneaky_demo, fresh])
+            with mock.patch.object(m, "notify_all", return_value=(True, [("ok", True, "")])) as na:
+                m.run_once(fetcher, cfg)
+                title, md = na.call_args[0][1], na.call_args[0][2]
+                self.assertIn("上新1辆", title)
+                self.assertNotIn("73,950", md)
+            # EXCLUDE_DEMO=0 时两辆都提醒(高里程车正常标注)
+            cfg2 = self.cfg(d)
+            cfg2["EXCLUDE_DEMO"] = "0"
+            cfg2["STATE_FILE"] = str(Path(d) / "state2" / "seen.json")
+            with mock.patch.object(m, "notify_all", return_value=(True, [("ok", True, "")])) as na2:
+                m.run_once(FakeFetcher([sneaky_demo, fresh]), cfg2)
+                self.assertIn("上新2辆", na2.call_args[0][1])
+
     def test_notify_failure_counter_escalates_and_resets(self):
         # 回归测试:Secret 写坏导致推送连败时,计数要累计(供退出码亮红灯),恢复后清零
         with tempfile.TemporaryDirectory() as d:
