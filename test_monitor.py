@@ -260,6 +260,29 @@ class TestRunOnce(unittest.TestCase):
                 title = na.call_args[0][1]
                 self.assertIn("上新1辆", title)
 
+    def test_notify_failure_counter_escalates_and_resets(self):
+        # 回归测试:Secret 写坏导致推送连败时,计数要累计(供退出码亮红灯),恢复后清零
+        with tempfile.TemporaryDirectory() as d:
+            cfg = self.cfg(d)
+            fetcher = FakeFetcher([REAL_AWD_NEW])
+            with mock.patch.object(m, "notify_all", return_value=(False, [("x", False, "40001")])):
+                for _ in range(4):
+                    m.run_once(fetcher, cfg)
+            state = m.load_state(Path(cfg["STATE_FILE"]))
+            self.assertEqual(state["consecutive_notify_failures"], 4)
+            with mock.patch.object(m, "notify_all", return_value=(True, [("ok", True, "")])):
+                m.run_once(fetcher, cfg)
+            self.assertEqual(
+                m.load_state(Path(cfg["STATE_FILE"]))["consecutive_notify_failures"], 0
+            )
+
+    def test_config_values_are_stripped(self):
+        # 回归测试:GitHub Secret 经管道注入可能带尾随换行,必须清理
+        with mock.patch.dict(m.os.environ, {"SERVERCHAN_SENDKEY": "SCTxxxx\r\n", "ZIP_CODE": " 92614 "}):
+            cfg = m.load_config()
+        self.assertEqual(cfg["SERVERCHAN_SENDKEY"], "SCTxxxx")
+        self.assertEqual(cfg["ZIP_CODE"], "92614")
+
     def test_failure_alert_threshold_and_cooldown(self):
         with tempfile.TemporaryDirectory() as d:
             cfg = self.cfg(d)  # 阈值 3

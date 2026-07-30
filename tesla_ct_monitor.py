@@ -112,7 +112,8 @@ def load_config() -> dict:
     cfg.setdefault("FAIL_ALERT_THRESHOLD", "10")
     cfg.setdefault("FETCH_MODES", "headless")
     cfg.setdefault("STATE_FILE", str(BASE_DIR / "state" / "seen_vins.json"))
-    return cfg
+    # 密钥经由 Secrets/管道注入时可能混入尾随换行或空格,一律清理
+    return {k: (v.strip() if isinstance(v, str) else v) for k, v in cfg.items()}
 
 
 # ---------------------------------------------------------------------------
@@ -501,7 +502,13 @@ def load_state(path: Path) -> dict:
                 path.rename(path.with_suffix(".corrupt.json"))
             except Exception:
                 pass
-    return {"version": 1, "vins": {}, "consecutive_failures": 0, "last_failure_alert": None}
+    return {
+        "version": 1,
+        "vins": {},
+        "consecutive_failures": 0,
+        "consecutive_notify_failures": 0,
+        "last_failure_alert": None,
+    }
 
 
 def save_state(path: Path, state: dict) -> None:
@@ -625,6 +632,12 @@ def run_once(fetcher: InventoryFetcher, cfg: dict, dry_run: bool = False) -> boo
         return True
 
     sent, results = notify_all(cfg, title, md)
+    if results:
+        # 推送通道持续全败时累计计数,让 Actions 亮红灯(GitHub 会邮件提醒),
+        # 否则通道坏掉用户会毫无感知地漏车
+        state["consecutive_notify_failures"] = (
+            0 if sent else int(state.get("consecutive_notify_failures") or 0) + 1
+        )
     if sent or not results:
         # 推送成功(或压根没配通道)才把车辆记为已提醒;
         # 配了通道但全部失败 → 不落状态,下一轮重试,避免静默漏报。
@@ -662,27 +675,29 @@ def main() -> int:
     modes = [m.strip() for m in str(cfg["FETCH_MODES"]).split(",") if m.strip()]
     fetcher = InventoryFetcher(cfg["ZIP_CODE"], modes, headed=args.headed)
 
-    def exit_code(last_ok: bool) -> int:
-        if last_ok:
-            return 0
+    def exit_code() -> int:
+        # 偶发失败返回 0(下轮自愈);抓取或推送持续失败返回 1 让 Actions 亮红灯
         state = load_state(Path(cfg["STATE_FILE"]))
-        fails = int(state.get("consecutive_failures") or 0)
-        # 偶发失败返回 0(下轮自愈),持续失败返回 1 让 Actions 亮红灯
+        fails = max(
+            int(state.get("consecutive_failures") or 0),
+            int(state.get("consecutive_notify_failures") or 0),
+        )
         return 1 if fails >= int(float(cfg["FAIL_ALERT_THRESHOLD"])) else 0
 
     try:
         if args.loop is None:
-            return exit_code(run_once(fetcher, cfg, dry_run=args.dry_run))
+            run_once(fetcher, cfg, dry_run=args.dry_run)
+            return exit_code()
 
         interval = max(20, args.loop)
         log(f"🕐 常驻模式启动:约每 {interval} 秒检查一次(Ctrl+C 退出)")
         runs = 0
         while True:
-            ok = run_once(fetcher, cfg, dry_run=args.dry_run)
+            run_once(fetcher, cfg, dry_run=args.dry_run)
             runs += 1
             if args.max_runs and runs >= args.max_runs:
                 log(f"到达 --max-runs={args.max_runs},退出")
-                return exit_code(ok)
+                return exit_code()
             sleep_s = interval * random.uniform(0.85, 1.2)
             time.sleep(sleep_s)
     except KeyboardInterrupt:
