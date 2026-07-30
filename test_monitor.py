@@ -95,6 +95,21 @@ class TestClassify(unittest.TestCase):
         self.assertEqual(m.classify_vehicle(v)[0], "include")
 
 
+class TestBuildQuery(unittest.TestCase):
+    def test_query_carries_deliverability_filter(self):
+        # 回归测试:必须带官网同款可交付过滤参数,否则会混入
+        # “列表可见但下单页提示 not available for your registration ZIP Code”的区域锁定车
+        import urllib.parse
+        url = m.build_query("92614", 0, region="CA")
+        q = json.loads(urllib.parse.parse_qs(urllib.parse.urlparse(url).query)["query"][0])
+        self.assertEqual(q["version"], "v2")
+        self.assertTrue(q["isFalconDeliverySelectionEnabled"])
+        self.assertEqual(q["query"]["region"], "CA")
+        self.assertEqual(q["query"]["zip"], "92614")
+        self.assertEqual(q["query"]["range"], 0)
+        self.assertEqual(q["query"]["condition"], "new")
+
+
 class TestVehicleKey(unittest.TestCase):
     def test_prefers_vin_then_hash(self):
         self.assertEqual(m.vehicle_key({"VIN": "abc", "Hash": "h"}), "abc")

@@ -20,6 +20,7 @@
   PUSHPLUS_TOKEN       PushPlus token(pushplus.plus,免费额度更大)
   WECOM_WEBHOOK        企业微信群机器人 webhook 完整地址
   ZIP_CODE             搜索邮编,默认 92614
+  ZIP_REGION           邮编所在州代码(默认 CA),官网可交付过滤必需;换邮编时记得同步改
   EXCLUDE_DEMO         设为 1 时排除展车(官方“新车”库存里含试驾/展示车,有里程有折扣;
                        排除时里程超过 MAX_ODOMETER_MILES 的车即使没标展车也一并排除)
   MAX_ODOMETER_MILES   配合 EXCLUDE_DEMO=1 的里程红线,默认 200(全新车运输里程通常 <50)
@@ -99,6 +100,7 @@ def load_config() -> dict:
         "PUSHPLUS_TOKEN",
         "WECOM_WEBHOOK",
         "ZIP_CODE",
+        "ZIP_REGION",
         "EXCLUDE_DEMO",
         "MAX_ODOMETER_MILES",
         "RESURFACE_DAYS",
@@ -110,6 +112,7 @@ def load_config() -> dict:
         if val not in (None, ""):
             cfg[key] = val
     cfg.setdefault("ZIP_CODE", "92614")
+    cfg.setdefault("ZIP_REGION", "CA")  # 邮编所在州代码,配合可交付过滤
     cfg.setdefault("EXCLUDE_DEMO", "0")
     cfg.setdefault("MAX_ODOMETER_MILES", "200")
     cfg.setdefault("RESURFACE_DAYS", "3")
@@ -128,7 +131,11 @@ class FetchError(Exception):
     pass
 
 
-def build_query(zip_code: str, offset: int, count: int = PAGE_SIZE) -> str:
+def build_query(zip_code: str, offset: int, count: int = PAGE_SIZE, region: str = "CA") -> str:
+    # 关键:region + isFalconDeliverySelectionEnabled + version=v2 是官网同款“可交付过滤”开关。
+    # 实测(2026-07-30):裸查询返回 13 辆,其中混着大量“列表可见但下单页提示
+    # not available for your registration ZIP Code”的区域锁定车;带上这组参数后
+    # 服务端只返回该邮编真正可下单的车(与官网列表页行为一致)。
     payload = {
         "query": {
             "model": "ct",
@@ -141,11 +148,14 @@ def build_query(zip_code: str, offset: int, count: int = PAGE_SIZE) -> str:
             "super_region": "north america",
             "zip": zip_code,
             "range": 0,  # range=0 即官网“All deliverable(全部可交付)”搜索范围
+            "region": region,
         },
         "offset": offset,
         "count": count,
         "outsideOffset": 0,
         "outsideSearch": False,
+        "isFalconDeliverySelectionEnabled": True,
+        "version": "v2",
     }
     return API_TEMPLATE.format(query=urllib.parse.quote(json.dumps(payload)))
 
@@ -154,8 +164,9 @@ class InventoryFetcher:
     """维护一个 camoufox 浏览器实例;页面加载时由浏览器自动通过 Akamai 挑战,
     之后在页面上下文里 fetch 官方库存 API 拿 JSON。"""
 
-    def __init__(self, zip_code: str, modes: list[str], headed: bool = False):
+    def __init__(self, zip_code: str, modes: list[str], headed: bool = False, region: str = "CA"):
         self.zip_code = zip_code
+        self.region = region
         self.modes = modes or ["headless"]
         self.headed = headed
         self._cm = None
@@ -246,7 +257,7 @@ class InventoryFetcher:
         vehicles: dict[str, dict] = {}
         offset, total = 0, None
         while True:
-            data = self._fetch_json(build_query(self.zip_code, offset))
+            data = self._fetch_json(build_query(self.zip_code, offset, region=self.region))
             try:
                 total = int(data.get("total_matches_found") or 0)
             except (TypeError, ValueError):
@@ -679,7 +690,9 @@ def main() -> int:
         return 0 if ok else 1
 
     modes = [m.strip() for m in str(cfg["FETCH_MODES"]).split(",") if m.strip()]
-    fetcher = InventoryFetcher(cfg["ZIP_CODE"], modes, headed=args.headed)
+    fetcher = InventoryFetcher(
+        cfg["ZIP_CODE"], modes, headed=args.headed, region=cfg["ZIP_REGION"]
+    )
 
     def exit_code() -> int:
         # 偶发失败返回 0(下轮自愈);抓取或推送持续失败返回 1 让 Actions 亮红灯

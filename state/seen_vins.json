@@ -1,50 +1,7 @@
 {
  "version": 1,
- "vins": {
-  "7G2C258_3b68577ca617885070f79d5f683dfee8": {
-   "first_seen": "2026-07-30T04:01:42.248577+00:00",
-   "last_seen": "2026-07-30T04:27:38.373237+00:00",
-   "last_notified": "2026-07-30T04:01:42.248577+00:00",
-   "trim": "Cybertruck All-Wheel Drive",
-   "price": 73950
-  },
-  "7G2C258_60d35a330aba2e0ce5de9ecc2612a916": {
-   "first_seen": "2026-07-30T04:01:42.248577+00:00",
-   "last_seen": "2026-07-30T04:14:18.748748+00:00",
-   "last_notified": "2026-07-30T04:01:42.248577+00:00",
-   "trim": "Cybertruck All-Wheel Drive",
-   "price": 75200
-  },
-  "7G2C258_c5568017eddfdf9709afdb7f702d1f6b": {
-   "first_seen": "2026-07-30T04:01:42.248577+00:00",
-   "last_seen": "2026-07-30T04:04:22.757587+00:00",
-   "last_notified": "2026-07-30T04:01:42.248577+00:00",
-   "trim": "Cybertruck All-Wheel Drive",
-   "price": 76660
-  },
-  "7G2C258_5b0932374219d1f892965050d309e961": {
-   "first_seen": "2026-07-30T04:01:42.248577+00:00",
-   "last_seen": "2026-07-30T04:27:38.373237+00:00",
-   "last_notified": "2026-07-30T04:01:42.248577+00:00",
-   "trim": "Cybertruck All-Wheel Drive",
-   "price": 77500
-  },
-  "7G2C258_08163c679270504b9078d99247d02399": {
-   "first_seen": "2026-07-30T04:01:42.248577+00:00",
-   "last_seen": "2026-07-30T04:27:38.373237+00:00",
-   "last_notified": "2026-07-30T04:01:42.248577+00:00",
-   "trim": "Cybertruck All-Wheel Drive",
-   "price": 81840
-  },
-  "7G2C222_870100c161449dea841aea7108ee7d26": {
-   "first_seen": "2026-07-30T04:01:42.248577+00:00",
-   "last_seen": "2026-07-30T04:27:38.373237+00:00",
-   "last_notified": "2026-07-30T04:01:42.248577+00:00",
-   "trim": "Premium All-Wheel Drive",
-   "price": 81990
-  }
- },
+ "vins": {},
  "consecutive_failures": 0,
- "last_failure_alert": null,
- "consecutive_notify_failures": 0
+ "consecutive_notify_failures": 0,
+ "last_failure_alert": null
 }
