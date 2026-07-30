@@ -2,7 +2,8 @@ name: Cybertruck 库存监控
 
 on:
   schedule:
-    - cron: "*/5 * * * *"   # GitHub 定时任务最短间隔 5 分钟(高峰期可能延迟到 10~20 分钟)
+    - cron: "*/5 * * * *"   # 名义每 5 分钟;实测 GitHub 对定时任务限流严重(可能 1 小时+ 才调度一次),
+                            # 因此下面每次任务内部长时间连查,用“少次数×长时间”对冲限流
   workflow_dispatch: {}      # 允许在 Actions 页面手动触发
   push:
     branches: [main]
@@ -19,7 +20,7 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
@@ -47,14 +48,14 @@ jobs:
       - name: 安装虚拟显示(headless 被拦时的备用模式)
         run: sudo apt-get update -qq && sudo apt-get install -y -qq xvfb || true
 
-      - name: 运行库存检查(每次任务内连查 3 轮,把有效间隔压到约 1.5~2 分钟)
+      - name: 运行库存检查(任务内每约 70 秒连查 18 轮 ≈ 20 分钟,对冲定时限流)
         env:
           SERVERCHAN_SENDKEY: ${{ secrets.SERVERCHAN_SENDKEY }}
           PUSHPLUS_TOKEN: ${{ secrets.PUSHPLUS_TOKEN }}
           WECOM_WEBHOOK: ${{ secrets.WECOM_WEBHOOK }}
           ZIP_CODE: "92614"
           FETCH_MODES: "headless,virtual"
-        run: python tesla_ct_monitor.py --loop 70 --max-runs 3
+        run: python tesla_ct_monitor.py --loop 70 --max-runs 18
 
       - name: 保存去重状态(提交回仓库)
         if: always()
