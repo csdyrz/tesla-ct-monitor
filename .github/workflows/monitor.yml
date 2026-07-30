@@ -73,7 +73,12 @@ jobs:
           pushed=0
           for i in 1 2 3; do
             if git push; then pushed=1; break; fi
-            git pull --rebase origin main || true
+            # 冲突的 rebase 会留下现场,先清理再重试,否则后续重试必败;
+            # 状态文件冲突时丢弃本地轮次、以远端为准(下一轮会自然重建)
+            git rebase --abort 2>/dev/null || true
+            # rebase 中 -X ours 指正在变基到的远端一侧:冲突时以远端为准,
+            # 丢弃本轮状态提交(下一轮运行会自然重建,不影响正确性)
+            git pull --rebase -X ours origin main || true
           done
           if [ "$pushed" != "1" ]; then
             echo "::error::去重状态推送失败——状态丢失会导致下轮重复通知,请检查仓库写权限/分支保护"
