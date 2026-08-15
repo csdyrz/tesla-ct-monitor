@@ -14,6 +14,13 @@
    "last_notified": "2026-08-14T19:33:25.355956+00:00",
    "trim": "Premium All-Wheel Drive",
    "price": 83490
+  },
+  "7G2C258_18931a84acb8ae773dca2f6c2fafc6b5": {
+   "first_seen": "2026-08-15T17:18:31.398156+00:00",
+   "last_seen": "2026-08-15T17:20:46.961613+00:00",
+   "last_notified": "2026-08-15T17:18:31.398156+00:00",
+   "trim": "Premium All-Wheel Drive",
+   "price": 80990
   }
  },
  "consecutive_failures": 0,
