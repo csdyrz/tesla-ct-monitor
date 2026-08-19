@@ -3,9 +3,9 @@
  "vins": {
   "7G2C222_870100c161449dea841aea7108ee7d26": {
    "first_seen": "2026-08-03T17:21:13.698185+00:00",
-   "last_seen": "2026-08-08T19:34:28.659996+00:00",
-   "last_notified": "2026-08-08T18:33:22.526725+00:00",
-   "trim": "Cybertruck All-Wheel Drive",
+   "last_seen": "2026-08-19T16:47:40.480614+00:00",
+   "last_notified": "2026-08-19T16:27:08.729326+00:00",
+   "trim": "Premium All-Wheel Drive",
    "price": 81990
   },
   "7G2C222_c47a054c3b318122b00f5f35a087d4ca": {
@@ -21,6 +21,13 @@
    "last_notified": "2026-08-15T17:18:31.398156+00:00",
    "trim": "Premium All-Wheel Drive",
    "price": 80990
+  },
+  "7G2C222_53a91f77d120fa742017dfa5be2f3dc4": {
+   "first_seen": "2026-08-19T16:27:08.729326+00:00",
+   "last_seen": "2026-08-19T16:47:40.480614+00:00",
+   "last_notified": "2026-08-19T16:27:08.729326+00:00",
+   "trim": "Premium All-Wheel Drive",
+   "price": 79990
   }
  },
  "consecutive_failures": 0,
