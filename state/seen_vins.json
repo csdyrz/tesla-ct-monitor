@@ -28,9 +28,16 @@
    "last_notified": "2026-08-19T16:27:08.729326+00:00",
    "trim": "Premium All-Wheel Drive",
    "price": 79990
+  },
+  "7G2C222_4cb8bc855772c7d7568bfd814472f965": {
+   "first_seen": "2026-09-01T00:51:11.479404+00:00",
+   "last_seen": "2026-09-01T01:09:52.242580+00:00",
+   "last_notified": "2026-09-01T00:51:11.479404+00:00",
+   "trim": "Cybertruck All-Wheel Drive",
+   "price": 90490
   }
  },
- "consecutive_failures": 477,
+ "consecutive_failures": 0,
  "consecutive_notify_failures": 0,
  "last_failure_alert": "2026-08-31T08:01:57.438871+00:00"
 }
