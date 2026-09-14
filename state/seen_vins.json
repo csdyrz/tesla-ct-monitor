@@ -42,9 +42,23 @@
    "last_notified": "2026-09-01T23:25:20.947603+00:00",
    "trim": "Premium All-Wheel Drive",
    "price": 86990
+  },
+  "7G2C234_34a66b5490ccecdef0dd3d032be1db8b": {
+   "first_seen": "2026-09-14T02:09:56.071205+00:00",
+   "last_seen": "2026-09-14T02:09:56.071205+00:00",
+   "last_notified": "2026-09-14T02:09:56.071205+00:00",
+   "trim": "Premium All-Wheel Drive",
+   "price": 87990
+  },
+  "7G2C234_7553b47eb7454d9415d2540a9b05ef7b": {
+   "first_seen": "2026-09-14T02:09:56.071205+00:00",
+   "last_seen": "2026-09-14T02:09:56.071205+00:00",
+   "last_notified": "2026-09-14T02:09:56.071205+00:00",
+   "trim": "Premium All-Wheel Drive",
+   "price": 91490
   }
  },
- "consecutive_failures": 329,
+ "consecutive_failures": 2,
  "consecutive_notify_failures": 0,
  "last_failure_alert": "2026-09-13T14:30:49.527950+00:00"
 }
