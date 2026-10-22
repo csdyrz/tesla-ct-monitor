@@ -58,7 +58,7 @@
    "price": 91490
   }
  },
- "consecutive_failures": 268,
+ "consecutive_failures": 281,
  "consecutive_notify_failures": 0,
  "last_failure_alert": "2026-10-21T18:59:35.725266+00:00"
 }
