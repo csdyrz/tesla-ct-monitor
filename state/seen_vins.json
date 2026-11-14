@@ -8,13 +8,6 @@
    "trim": "Premium All-Wheel Drive",
    "price": 81990
   },
-  "7G2C222_c47a054c3b318122b00f5f35a087d4ca": {
-   "first_seen": "2026-08-14T19:33:25.355956+00:00",
-   "last_seen": "2026-08-14T19:54:13.843817+00:00",
-   "last_notified": "2026-08-14T19:33:25.355956+00:00",
-   "trim": "Premium All-Wheel Drive",
-   "price": 83490
-  },
   "7G2C258_18931a84acb8ae773dca2f6c2fafc6b5": {
    "first_seen": "2026-08-15T17:18:31.398156+00:00",
    "last_seen": "2026-08-18T01:16:58.863480+00:00",
@@ -58,7 +51,7 @@
    "price": 91490
   }
  },
- "consecutive_failures": 769,
+ "consecutive_failures": 0,
  "consecutive_notify_failures": 0,
  "last_failure_alert": "2026-11-14T01:45:04.559515+00:00"
 }
